@@ -1,0 +1,4 @@
+trussty
+=======
+
+truss solver app
