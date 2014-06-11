@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+rect {
+  fill: red;
+  pointer-events: all;
+}
+
+.node {
+  fill: #000;
+}
+
+.cursor {
+  fill: none;
+  stroke: brown;
+  pointer-events: none;
+}
+
+line {
+  stroke: #999;
+}
+
+</style>
+
+
+<body>
+
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var line = 0;
+var current = null;
+var last_id = 0;
+
+function click_create(){
+  if (d3.event.defaultPrevented) return;
+
+  // get point location
+  var p = d3.mouse(this),
+      node = {id: last_id++, x: p[0], y: p[1], connections:[]};
+
+  // add the node
+  svg.append("circle")
+      .datum(node)
+      .attr("class", "node")
+      .attr("r", "5")
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; })
+      .on("click", click_remove)
+      .call(drag);
+}
+
+function click_remove(d) {
+  if (d3.event.defaultPrevented) return;
+
+  d3.selectAll(".link")
+    .each(function (linkData) {
+      if (parseInt(linkData.source) == parseInt(d.id))
+        d3.select(this).remove();
+      else if (parseInt(linkData.destination) == parseInt(d.id))
+        d3.select(this).remove();
+    });
+
+  d3.select(this).remove();
+}
+
+// Create the SVG
+var svg = d3.select("body").append("svg")
+  .attr("width", 700)
+  .attr("height", 400);
+
+// Add a background
+svg.append("rect")
+  .attr("width", 700)
+  .attr("height", 400)
+  .style("stroke", "#999999")
+  .style("fill", "#F6F6F6")
+  .on("click", click_create);
+
+// add button to make lines
+svg.append("rect")
+  .attr("width", 50)
+  .attr("height", 20)
+  .on("click", function () {
+    d3.event.stopPropagation();
+    line = !line;
+  });
+
+/* returns true if point1 and point1 are within tolerance
+  radius of one another, false otherwise */
+function tolerance(point1, point2) {
+  return (Math.abs(point1.x - point2.x) <= 10 &&
+          Math.abs(point1.y - point2.y) <= 10);
+}
+
+/* returns true if node1 and node 2 are connected with a link,
+  false otherwise */
+function connected(node1, node2) {
+  var connected = false,
+    id1 = parseInt(node1.id),
+    id2 = parseInt(node2.id);
+
+  if(id1 == id2) return true;
+
+  (d3.selectAll(".link"))[0].some(function(t) {
+    var link = d3.select(t).datum();
+    if(parseInt(link.source) == id1 || parseInt(link.destination) == id1)
+      if(parseInt(link.source) == id2 || parseInt(link.destination) == id2) {
+        connected = true;
+        return true;
+      }
+    return false;
+  });
+  return connected;
+}
+
+/* Define drag behavior for lines & nodes
+  SEE dragend() and drag() */
+var drag = d3.behavior.drag()
+    .on("dragstart", function(d) {
+      d3.event.sourceEvent.stopPropagation();
+      d3.event.sourceEvent.preventDefault();
+
+      // start a new line
+      if (line == 1)
+        current = svg.insert("line", ".node")
+          .attr("x1", d.x)
+          .attr("y1", d.y)
+          .attr("x2", d.x)
+          .attr("y2", d.y)
+    })
+    .on("drag", drag)
+    .on("dragend", dragend);
+
+function dragend (d) {
+  if(line == 0) return;
+
+  var mp = {x:current.attr("x2"), y:current.attr("y2")},
+    set = false;
+
+  (d3.selectAll(".node"))[0]
+    .some(function(t) {
+      var node = d3.select(t).datum();
+
+      // is it close to an unconnected node?
+      if(tolerance(node, mp) && !connected(node, d)) {
+
+        // align truss with center of node & update stuff
+        current.attr("x2", node.x)
+          .attr("y2", node.y)
+          .attr("class", "link")
+          .datum({source:d.id, destination:node.id});
+        set = true;
+        return true;
+      }
+      return false;
+    });
+
+  if(!set) current.remove();
+}
+
+function drag (d) {
+  var x = d3.event.x;
+  var y = d3.event.y;
+
+  // drag a node
+  if(line == 0) {
+    d3.select(this).attr("cx", x)
+      .attr("cy", y)
+      .datum({id: d.id, x:x, y:y, connections:d.connections});
+    
+    // drag the attached trusses with it
+    d3.selectAll(".link")
+      .each(function (linkData, i) {
+        if (parseInt(linkData.source) == parseInt(d.id))
+          d3.select(this).attr("x1", x)
+            .attr("y1", y);
+        else if (parseInt(linkData.destination) == parseInt(d.id)) {
+          d3.select(this).attr("x2", x)
+            .attr("y2", y);
+        }
+      });
+  } 
+  // drag a line
+  else {
+    current.attr("x2", x)
+      .attr("y2", y);
+  }
+}
+
+</script>
