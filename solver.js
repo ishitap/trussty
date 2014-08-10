@@ -19,7 +19,6 @@ var meta = { rolling: null, fixed: null };
 
 d3.select("body")
 	.on("keydown", function (d) {
-		console.log(d3.event.keyCode)
 			switch(d3.event.keyCode) {
 			case 84:
 				mode = "truss";
