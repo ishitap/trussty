@@ -13,10 +13,13 @@ var nodeIDs = 0,
 		trussIDs = 0,
 		forceIDs = 0;
 
+var snap = false;
+
 var meta = { rolling: null, fixed: null };
 
 d3.select("body")
 	.on("keydown", function (d) {
+		console.log(d3.event.keyCode)
 			switch(d3.event.keyCode) {
 			case 84:
 				mode = "truss";
@@ -33,6 +36,8 @@ d3.select("body")
 			case 71:
 				mode = "fixed";
 				break;
+			case 83:
+				snap = !snap;
 		}
 	}).on("keyup", function () {})
 
@@ -43,8 +48,13 @@ var svg = d3.select("body").append("svg")
 
 // set up graph
 var graph = svg.append("g")
+	.attr("width", GRAPH_W)
+	.attr("height", GRAPH_H)
 	.on("click", function (d) {
-		if (d3.event.defaultPrevented) return;
+		if (d3.event.defaultPrevented) {
+			console.log("yay");
+			return;
+		}
 		if (mode != "node") return;
 		var p = d3.mouse(this);
 		createNode(p);
@@ -147,7 +157,7 @@ var getForce = function (nd) {
 var createNode = function (p) {
 	var node = {id: nodeIDs++, x: p[0], y: p[1], trusses: [], fx: 0, fy: 0};
 
-	graph.append("circle")
+	svg.append("circle")
 		.datum(node)
 		.attr({
 			"class": "node",
@@ -156,7 +166,7 @@ var createNode = function (p) {
 			"cy": function(d) {return d.y}
 		})
 		.on("click", function (d) {
-			d3.event.preventDefault();
+			if(d3.event.defaultPrevented) return;
 			if(d3.event.shiftKey) {
 				clearNode(d);
 				this.remove();
@@ -201,7 +211,7 @@ var createTruss = function (source, mp) {
 		// is it close to an unconnected node?
 		if(util.withinTolerance(nd, mp) && !connected(nd, source)) {
 			var td = {id: trussIDs++, source: source.id, dest: nd.id};
-			var truss = graph.insert("line", ".node")
+			var truss = svg.insert("line", ".node")
 				.attr({
 					"class": "truss link",
 					"x1": source.x, "y1": source.y,
@@ -251,7 +261,7 @@ var createForce = function (source, mp) {
 	var fx = mp.x - source.x;
 	var fy = mp.y - source.y;
 
-	var force = graph.insert ("line", ".node")
+	var force = svg.insert("line", ".node")
 		.attr({
 			"class": "force link",
 			"x1": source.x, "y1": source.y,
@@ -290,11 +300,17 @@ var dragend = function (d) {
 }; 
 
 var drag = function (d) {
+
+	  var s = util.snapToGrid(d3.event);
   var x = d3.event.x;
   var y = d3.event.y;
 
   // drag a node
   if(mode == "node") {
+  	if(snap) {
+	  	x = s.x;
+  		y = s.y;
+  	}
    	var node = d3.select(this)
    		.attr({ "cx": x, "cy": y });
    	var nd = node.datum();
@@ -324,8 +340,13 @@ var drag = function (d) {
   	tempTruss.attr({"x2": x, "y2": y});
 
   // drag a force
-  else if (mode == "force")
+  else if (mode == "force") {
+  	if(snap) {
+  		x = s.x;
+  		y = s.y;
+  	}
   	tempForce.attr({"x2": x, "y2": y});
+  }
 };
 
 /* drag 
@@ -335,9 +356,7 @@ var dragAction = d3.behavior.drag()
 		d3.event.sourceEvent.stopPropagation();
 		d3.event.sourceEvent.preventDefault();
 
-		if (mode == "node") {
-			console.log(d.fx + " " + d.fy)
-		}
+		if (mode == "node") return;
 
 		if (mode == "force" && d.fx != 0 && d.fy != 0) {
 			var force = getForce(d);
