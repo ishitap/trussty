@@ -2,7 +2,7 @@ trussty
 =======
 
 Hi! Welcome to this `d3.js` / `numeric.js` truss solver app. :3 Progress is on `solver.html`.
-You can also see a working verson at (http://stanford.edu/~ishitap/trussty/solver.html).
+You can also see a working verson [here](http://stanford.edu/~ishitap/trussty/solver.html).
 
 Usage:
 ------
