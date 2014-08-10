@@ -49,6 +49,18 @@ var svg = d3.select("body").append("svg")
       .attr("width", GRAPH_W)
       .attr("height", GRAPH_H);
 
+svg.append("marker")
+	.attr({
+		"id": "triangle",
+		"viewBox" : "0 0 10 10", "refX": "0", "refY": "5",
+		"markerUnits": "strokeWidth",
+		"markerWidth": "4",
+		"markerHeight": "3",
+		"orient": "auto",
+		"style": "fill:lightblue"
+	}).append("path")
+		.attr("d", "M 0 0 L 10 5 L 0 10 z");
+
 // set up graph
 var graph = svg.append("g")
 	.attr("width", GRAPH_W)
@@ -58,6 +70,7 @@ var graph = svg.append("g")
 			console.log("yay");
 			return;
 		}
+		d3.event.preventDefault();
 		if (mode != "node") return;
 		var p = d3.mouse(this);
 		createNode(p);
@@ -109,6 +122,7 @@ var tempTruss = graph.insert("line", ".node")
 			.classed("link tempTruss hidden", true),
 		tempForce = graph.insert("line", ".node")
 			.classed("link tempForce hidden", true)
+			.attr("marker-end", "url(#triangle)")
 
 var getNodeByID = function (id) {
 	var found = -1;
@@ -268,7 +282,8 @@ var createForce = function (source, mp) {
 		.attr({
 			"class": "force link",
 			"x1": source.x, "y1": source.y,
-			"x2": mp.x, "y2": mp.y
+			"x2": mp.x, "y2": mp.y,
+			"marker-end": "url(#triangle)"
 		})
 		.datum({nid: source.id, fx: fx, fy: fy})
 		.on("click", function (fd) {
@@ -303,14 +318,13 @@ var dragend = function (d) {
 }; 
 
 var drag = function (d) {
-
-	  var s = util.snapToGrid(d3.event);
   var x = d3.event.x;
   var y = d3.event.y;
 
   // drag a node
   if(mode == "node") {
   	if(snap) {
+  		var s = util.snapToGrid(d3.event);
 	  	x = s.x;
   		y = s.y;
   	}
@@ -345,6 +359,7 @@ var drag = function (d) {
   // drag a force
   else if (mode == "force") {
   	if(snap) {
+  		var s = util.snapStraight(d, d3.event);
   		x = s.x;
   		y = s.y;
   	}
@@ -356,12 +371,12 @@ var drag = function (d) {
  * defines drag behavior on nodes, truesses, and forces */
 var dragAction = d3.behavior.drag()
 	.on("dragstart", function (d) {
-		d3.event.sourceEvent.stopPropagation();
 		d3.event.sourceEvent.preventDefault();
+		d3.event.sourceEvent.stopPropagation();
 
 		if (mode == "node") return;
 
-		if (mode == "force" && d.fx != 0 && d.fy != 0) {
+		if (mode == "force" && d.fx != 0 || d.fy != 0) {
 			var force = getForce(d);
 			clearForce(force.datum());
 			force.remove();
@@ -398,5 +413,4 @@ var setJoint = function (node) {
 		meta.fixed = node;
 	}
 };
-
 

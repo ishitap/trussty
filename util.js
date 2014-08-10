@@ -20,6 +20,15 @@ util.snapToGrid = function (point) {
   return np;
 };
 
+util.snapStraight = function (p1, p2) {
+  var pt = {x: p2.x, y: p2.y};
+  var slope = (p2.y - p1.y)/(p2.x - p1.x);
+  if (slope < 1 && slope > -1)
+    pt.y = p1.y;
+  else pt.x = p1.x;
+  return pt;
+}
+
 
 util.withinTolerance = function (point1, point2) {
   return (Math.abs(point1.x - point2.x) <= util.tolerance &&
