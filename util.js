@@ -49,5 +49,20 @@ util.printString = function () {
 
 }
 
+util.nodes = function () {
+    return util.setYRight(d3.selectAll(".node").data())
+}
+
+util.trusses = function () {
+    return util.setYRight(d3.selectAll(".truss").data())
+}
+
+util.forces = function () {
+    return util.setYRight(d3.selectAll(".force").data())
+}
+
+util.meta = function () {
+    return util.setYRight([meta]);
+}
 
 
