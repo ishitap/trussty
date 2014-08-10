@@ -38,6 +38,10 @@ d3.select("body")
 				break;
 			case 83:
 				snap = !snap;
+			    break;
+			case 67:
+			    util.calculate();
+			    break;
 		}
 	}).on("keyup", function () {})
 

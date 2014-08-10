@@ -62,7 +62,17 @@ util.forces = function () {
 }
 
 util.meta = function () {
-    return util.setYRight([meta]);
+    return meta;
 }
 
+util.calculate = function () {
+    var nodes = util.nodes();
+    var trusses = util.trusses();
+    var forces = util.forces();
+    var meta = util.meta();
 
+    console.log("Calculating!");
+
+    // call some kind of calc(nodes,trusses,forces,meta) func here!
+
+}
