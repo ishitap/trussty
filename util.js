@@ -83,5 +83,8 @@ util.calculate = function () {
     console.log("Calculating!");
 
     // call some kind of calc(nodes,trusses,forces,meta) func here!
+}
 
+util.scale = function (factor) {
+  currScaleFactor *= factor;
 }

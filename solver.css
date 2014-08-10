@@ -1,16 +1,13 @@
 
 rect {
   pointer-events: all;
+  stroke:#999;
+  stroke-width: 1px;
+  fill: #f9f9f9;
 }
 
 .node {
-  fill: #000;
-}
-
-.cursor {
-  fill: none;
-  stroke: brown;
-  pointer-events: none;
+  fill: #111;
 }
 
 .link {
@@ -18,7 +15,7 @@ rect {
 }
 
 .force, .tempForce {
-  stroke: lightblue;
+  stroke: #ADD8E6;
 }
 
 .truss, .tempTruss {
@@ -42,9 +39,9 @@ stroke-width: 1px;
 }
 
 .rolling {
-  fill: red;
+  fill: #FF4500;
 }
 
 .fixed {
-  fill: green;
+  fill: #2E8B57;
 }

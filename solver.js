@@ -37,15 +37,23 @@ d3.select("body")
 				break;
 			case 83:
 				snap = !snap;
-			    break;
+			  break;
 			case 67:
-			    util.calculate();
-			    break;
+			  util.calculate();
+			  break;
+			case 187:
+				if(currScaleFactor > 0.01)
+					scale(0.1);
+				break;
+			case 189:
+				if(currScaleFactor < 1000)
+					scale(10);
+				break;
 		}
 	}).on("keyup", function () {})
 
 // set up svg
-var svg = d3.select("body").append("svg")
+var svg = d3.select("#solver").append("svg")
       .attr("width", GRAPH_W)
       .attr("height", GRAPH_H);
 
@@ -54,8 +62,8 @@ svg.append("marker")
 		"id": "triangle",
 		"viewBox" : "0 0 10 10", "refX": "0", "refY": "5",
 		"markerUnits": "strokeWidth",
-		"markerWidth": "4",
-		"markerHeight": "3",
+		"markerWidth": "3",
+		"markerHeight": "4",
 		"orient": "auto",
 		"style": "fill:lightblue"
 	}).append("path")
@@ -79,9 +87,7 @@ var graph = svg.append("g")
 // set up border
 graph.append("rect")
   .attr("width", GRAPH_W)
-  .attr("height", GRAPH_H)
-  .style("stroke", "#999999")
-  .style("fill", "#F6F6F6");
+  .attr("height", GRAPH_H);
 
 /*-------GRIDLINES--------*/
 
@@ -115,6 +121,12 @@ graph.selectAll("line.xline")
     "y1" : 0,
     "y2" : GRAPH_H
   });
+
+var currScaleFactor = 10;
+
+var scale = function (factor) {
+	// change all the display values if display is on
+}
 
 /*------------------------*/
 
@@ -309,17 +321,22 @@ var dragend = function (d) {
 		return;
 
 	var temp = (mode == "truss") ? tempTruss : tempForce;
-
 	var mp = {x:temp.attr("x2"), y:temp.attr("y2")};
 	temp.classed("hidden", true);
 
 	if (mode == "truss") createTruss(d, mp);
-	else createForce(d, mp);
+
+	// if it's not within tolerance try to get back the old truss!!
+	else if (!util.withinTolerance(d, mp)) {
+		createForce(d, mp);
+	}
 }; 
 
 var drag = function (d) {
   var x = d3.event.x;
   var y = d3.event.y;
+
+  if(mode == "rolling" || mode == "fixed") return;
 
   // drag a node
   if(mode == "node") {
@@ -363,7 +380,7 @@ var drag = function (d) {
   		x = s.x;
   		y = s.y;
   	}
-  	tempForce.attr({"x2": x, "y2": y});
+  	tempForce.classed("hidden", false).attr({"x2": x, "y2": y});
   }
 };
 
@@ -371,10 +388,10 @@ var drag = function (d) {
  * defines drag behavior on nodes, truesses, and forces */
 var dragAction = d3.behavior.drag()
 	.on("dragstart", function (d) {
-		d3.event.sourceEvent.preventDefault();
 		d3.event.sourceEvent.stopPropagation();
+		d3.event.sourceEvent.preventDefault();
 
-		if (mode == "node") return;
+		if (mode == "node" || mode == "rolling" || mode == "fixed") return;
 
 		if (mode == "force" && d.fx != 0 || d.fy != 0) {
 			var force = getForce(d);
@@ -383,9 +400,8 @@ var dragAction = d3.behavior.drag()
 		}
 
 
-		var temp = (mode == "truss") ? tempTruss : tempForce;
-		temp.classed("hidden", false)
-			.attr({
+		var temp = (mode == "truss") ? tempTruss.classed("hidden", false) : tempForce;
+		temp.attr({
 					"x1": d.x, "y1": d.y,
       		"x2": d.x, "y2": d.y
 			});
