@@ -83,6 +83,11 @@ util.calculate = function () {
     console.log("Calculating!");
 
     // call some kind of calc(nodes,trusses,forces,meta) func here!
+    // example below
+    
+    nodes.forEach( function (node) {
+    	console.log("(" + node.x + ", " + node.y + ")");	
+    });
 }
 
 util.scale = function (factor) {
