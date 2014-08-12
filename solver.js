@@ -69,15 +69,13 @@ svg.append("marker")
 	}).append("path")
 		.attr("d", "M 0 0 L 10 5 L 0 10 z");
 
+/*-------GRIDLINES--------*/
+
 // set up graph
 var graph = svg.append("g")
 	.attr("width", GRAPH_W)
 	.attr("height", GRAPH_H)
 	.on("click", function (d) {
-		if (d3.event.defaultPrevented) {
-			console.log("yay");
-			return;
-		}
 		d3.event.preventDefault();
 		if (mode != "node") return;
 		var p = d3.mouse(this);
@@ -86,10 +84,10 @@ var graph = svg.append("g")
 
 // set up border
 graph.append("rect")
+	.attr("class", "background")
   .attr("width", GRAPH_W)
   .attr("height", GRAPH_H);
-
-/*-------GRIDLINES--------*/
+var currScaleFactor = 10;
 
 // set up gridlines
 function gridlines(size) {
@@ -122,19 +120,17 @@ graph.selectAll("line.xline")
     "y2" : GRAPH_H
   });
 
-var currScaleFactor = 10;
-
 var scale = function (factor) {
 	// change all the display values if display is on
 }
 
 /*------------------------*/
 
-var tempTruss = graph.insert("line", ".node")
+var tempTruss = svg.insert("line", ".node")
 			.classed("link tempTruss hidden", true),
-		tempForce = graph.insert("line", ".node")
+		tempForce = svg.insert("line", ".node")
 			.classed("link tempForce hidden", true)
-			.attr("marker-end", "url(#triangle)")
+			.attr("marker-end", "url(#triangle)");
 
 var getNodeByID = function (id) {
 	var found = -1;
@@ -186,7 +182,11 @@ var getForce = function (nd) {
 var createNode = function (p) {
 	var node = {id: nodeIDs++, x: p[0], y: p[1], trusses: [], fx: 0, fy: 0};
 
-	svg.append("circle")
+	var grp = svg.insert("g", ".tool")
+		.datum(node)
+		.attr("class", "nodegrp");
+
+	grp.append("circle")
 		.datum(node)
 		.attr({
 			"class": "node",
@@ -198,7 +198,7 @@ var createNode = function (p) {
 			if(d3.event.defaultPrevented) return;
 			if(d3.event.shiftKey) {
 				clearNode(d);
-				this.remove();
+				$(this).parent().remove();
 			}
 			if(mode == "rolling" || mode == "fixed")
 				setJoint(this);
@@ -206,26 +206,51 @@ var createNode = function (p) {
 		.call(dragAction);
 };
 
+var createToolTip = function (d) {
+	var tt = svg.append("g")
+		.attr("class", "tool")
+		.attr("visibility", "hidden")
+		.attr("id", "nid" + d.id)
+		.datum(d);
+
+	var rect = tt.append("rect")
+		.attr({
+			class: "toolbox",
+			"rx": 5, "ry": 5,
+			"x": function (d) {return d.x+10; },
+			"y": function (d) {return d.y-12},
+			"height": "24px",
+			"visibility": "inherit"
+		});
+	var text = tt.append("text")
+		.text(function (d) {return "(" + d.x + ", " + d.y + ")"})
+		.attr({
+			"class": "tooltext",
+			"x": function (d) {return d.x+16;},
+			"y": function (d) {return d.y+3.5;},
+			"visibility": "inherit"
+		});
+	rect.attr("width", text.node().getBBox().width+12)
+		.attr("visbility", "hidden")
+}
+
 var clearNode = function (nd) {
 	nd.trusses.forEach(function (td) {
 		var otherID = (td.source == nd.id) ? td.dest : td.source;
-		console.log(otherID)
 		var otherNode = getNodeByID(otherID);
-		console.log(otherNode)
+
 		rm(td, otherNode);
 
 		var found = null;
 
-		d3.selectAll(".truss")[0].some(function (truss) {
+		d3.selectAll(".trussgrp")[0].some(function (truss) {
 			var trussData = d3.select(truss).datum();
-			console.log(trussData)
 			if (parseInt(trussData.id) == parseInt(td.id)) {
 				found = truss;
 				return true;
 			}
 			return false;
 		});
-		console.log(found);
 		d3.select(found).remove();
 	});
 }
@@ -240,7 +265,11 @@ var createTruss = function (source, mp) {
 		// is it close to an unconnected node?
 		if(util.withinTolerance(nd, mp) && !connected(nd, source)) {
 			var td = {id: trussIDs++, source: source.id, dest: nd.id};
-			var truss = svg.insert("line", ".node")
+			var trussgrp = svg.insert("g", ".nodegrp")
+				.attr("class", "trussgrp")
+				.datum(td);
+
+			var truss = trussgrp.append("line")
 				.attr({
 					"class": "truss link",
 					"x1": source.x, "y1": source.y,
@@ -249,9 +278,8 @@ var createTruss = function (source, mp) {
 				.datum(td)
 				.on("click", function (d) {
 					if(d3.event.shiftKey) {
-						console.log("yay")
 						clearTruss(d);
-						this.remove();
+						$(this).parent().remove();
 					}
 				});
 
@@ -286,11 +314,11 @@ var clearTruss = function (td) {
 	rm(td, nd2);
 }
 
-var createForce = function (source, mp) {
+var createForce = function (source, mp, parent) {
 	var fx = mp.x - source.x;
 	var fy = mp.y - source.y;
 
-	var force = svg.insert("line", ".node")
+	var force = d3.select(parent).insert("line", ".node")
 		.attr({
 			"class": "force link",
 			"x1": source.x, "y1": source.y,
@@ -328,7 +356,7 @@ var dragend = function (d) {
 
 	// if it's not within tolerance try to get back the old truss!!
 	else if (!util.withinTolerance(d, mp)) {
-		createForce(d, mp);
+		createForce(d, mp, $(this).parent()[0]);
 	}
 }; 
 
@@ -348,8 +376,6 @@ var drag = function (d) {
    	var node = d3.select(this)
    		.attr({ "cx": x, "cy": y });
    	var nd = node.datum();
-   	nd.x = x;
-   	nd.y = y;
 
    	// drag attached trusses with it
    	var trusses = d3.selectAll(".truss");
@@ -362,12 +388,14 @@ var drag = function (d) {
    	});
 
    	// drag attached force with it
-   	var force = getForce(nd);
+   	var force = d3.select($(this).parent().children(".force")[0])
    	if (force != null)
 	   	force.attr({
 	   		"x1": x, "y1": y,
   	 		"x2": x+d.fx, "y2": y+d.fy
    		});
+   	nd.x = x;
+   	nd.y = y;
   }
  	// drag a truss 
   else if (mode == "truss")

@@ -1,5 +1,5 @@
 
-rect {
+.background {
   pointer-events: all;
   stroke:#999;
   stroke-width: 1px;
@@ -26,11 +26,6 @@ rect {
   stroke-width:0px;
 }
 
-.hovering {
-  stroke:orange;
-  stroke-width:3px;
-}
-
 .gridline {
 fill : #ffffff;
 stroke: #dddddd;
@@ -44,4 +39,13 @@ stroke-width: 1px;
 
 .fixed {
   fill: #2E8B57;
+}
+
+.toolbox {
+  pointer-events: none;
+  fill: rgba(0,0,0,0.7)
+}
+
+.tooltext {
+  fill: #ffffff;
 }
