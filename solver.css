@@ -49,3 +49,19 @@ stroke-width: 1px;
 .tooltext {
   fill: #ffffff;
 }
+
+.forceCircle {
+  fill: #ADD8E6;
+}
+
+.forceText {
+  fill: #ffffff;
+}
+
+.tension {
+  stroke:#7393FF;
+}
+
+.compression {
+  stroke:#A8324E;
+}

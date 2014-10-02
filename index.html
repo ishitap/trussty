@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="utf-8">
+	<link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet"></link>
+	<link href="./trussty.css" rel="stylesheet"></link>
+  <link rel="stylesheet" type="text/css" href="./solver.css"></link>
+  <title>Trussty</title>
+ </head>
+
+<body>
+
+<div class= "container">
+	<div class="header">
+		<ul class="nav nav-pills pull-right">
+			<li><a data-toggle="modal" data-target="#helpModal">Help</a></li>
+			<li><a data-toggle="modal" data-target="#aboutModal">About</a></li>
+		</ul>
+		<h3 class="text-muted">Trussty</h3>
+	</div>
+
+	<div id="solver"></div>
+
+  <form class="form-inline" role="form">
+    <div class="form-group">
+      <select class="form-control" onchange="modechange(this.value)">
+        <option value="node" id="nodeopt"> node </option>
+        <option value="truss" id="trussopt"> truss </option>
+        <option value="force" id="forceopt"> force </option>
+        <option value="fixed" id="fixedopt"> fixed </option>
+        <option value="rolling" id="rollingopt"> rolling </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="button" class="btn btn-default" onclick="toggleSnap()">Snap</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="button" class="btn btn-default" onclick="calculate()">Calculate</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="button" class="btn btn-default" onclick="toggleXY()">(x, y)</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="button" class="btn btn-default">Print</button>
+      </div>
+    </div>
+  </form>
+
+  	<div class="footer"><p>&copy; Ishita Prasad 2014</p></div>
+  </div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Help</h4>
+      </div>
+      <div class="modal-body">
+        <p><kbd>n</kbd> node mode &mdash; add nodes and move them around
+        <p><kbd>t</kbd> truss mode &mdash; add trusses by dragging between nodes
+     		<p><kbd>f</kbd> force mode &mdash; add forces by dragging them from nodes
+   			<p><kbd>g</kbd> fixed joint &mdash; select a fixed joint node by clicking on it
+ 				<p><kbd>r</kbd> rolling joint &mdash; select a rolling joint node by clicking on it
+ 				<p><kbd>s</kbd> toggle snap to grid &mdash; useful for nodes in straight lines and forces that go straight down
+ 				<p><kbd>shift + click</kbd> remove an element
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- About Modal -->
+<div class="modal fade" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Help</h4>
+      </div>
+      <div class="modal-body">
+        <p> Hi! This is currently a truss solver under development. You can <a href="https://github.com/ishitap/trussty/">find</a> the code project on Github, or play around here. Sorry if there are bugs! We are trying. </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="./util.js"></script>
+<script src="./solver.js"></script>

@@ -35,7 +35,13 @@ util.withinTolerance = function (point1, point2) {
 	Math.abs(point1.y - point2.y) <= util.tolerance);
 };
 
-util.setYRight = function (a) {
+util.setYRight = function (y) {
+  if(y)
+    y = GRAPH_H - y;
+  return y;
+}
+
+util.setAllYRight = function (a) {
 	var array = a.slice();
 	array.forEach(function (t) {
 		if(t.y)
@@ -79,7 +85,6 @@ util.calculate = function () {
     var trusses = util.trusses();
     var forces = util.forces();
     var meta = util.meta();
-
     console.log("Calculating!");
 
     // call some kind of calc(nodes,trusses,forces,meta) func here!
@@ -94,6 +99,19 @@ util.calculate = function () {
     return "done!";
 }
 
-util.scale = function (factor) {
-  currScaleFactor *= factor;
+util.forceLocation = function (p1, p2) {
+  var nx = p1.x + 0.8 * (p2.x - p1.x);
+  var ny = p1.y + 0.8 * (p2.y - p1.y);
+  return {cx:nx, cy:ny};
+}
+
+util.forceTextLocation = function (c) {
+  return {x: c.cx-7, y: c.cy+5};
+}
+
+util.forceMagnitude = function (p1, p2) {
+  var xdiff = (p2.x - p1.x);
+  var ydiff = (p2.y - p1.y);
+  var len = Math.sqrt(Math.pow(xdiff, 2) + Math.pow(ydiff, 2));
+  return Math.floor(len/5);
 }
