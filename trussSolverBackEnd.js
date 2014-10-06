@@ -1,3 +1,5 @@
+importScripts("numeric-1.2.6.js");
+
 // Truss Solver Back End
 
 // ------------------------- Data Entry ------------------------------ //
@@ -77,6 +79,7 @@ meta = {fixed: 0, rolling: 1}
 */
 
 // MIT example Truss, variable height
+/*
 var hp = 1
 nodes = [ {id: 0, x: 0, y: 0*hp,
 			trusses: [ {id: 0, source: 0, dest: 6},
@@ -121,7 +124,17 @@ trusses = [ {id: 0, source: 0, dest: 6},
 			{id: 9, source: 5, dest: 4},
 			{id: 10, source: 6, dest: 4} ]
 
-meta = {fixed: 3, rolling: 0}
+meta = {fixed: 3, rolling: 0} */
+
+self.addEventListener("message", function (e) {
+
+	var data = e.data;
+	if(data.message != "calculate")
+		return;
+
+	var nodes = e.data.nodes;
+	var trusses = e.data.trusses;
+	var meta = e.data.meta;
 
 // --------------------- Statically Determinant Test ------------------ //
 numElements = trusses.length
@@ -221,12 +234,12 @@ console.log(b)
 
 // ----------------------- Solve the System ------------------------//
 
-console.log(A)
+self.postMessage(A)
 
 Ainv = numeric.inv(A)
 var x = numeric.dot(Ainv, b)
 
-console.log(x)
+self.postMessage(x)
 
 //Results
 // negative: member in compression
@@ -277,5 +290,6 @@ function printMatrix(A) {
 	}
 }
 
+}); // end worker onmessage
 
 

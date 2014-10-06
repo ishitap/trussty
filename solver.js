@@ -532,11 +532,21 @@ var calculate = function () {
 	mode = "calc";
 	var tensions = [];
 	var trusses = d3.selectAll(".truss");
-	trusses.each(function (td) {
-		var n = Math.random() - 0.5;
-		tensions.push({id: td.id, tension: n});		
-	});
-	addTensions(tensions);
+
+	var worker = new Worker('trussSolverBackEnd.js');
+
+	worker.addEventListener('message', function(e) {
+  	console.log('Worker said: ', e.data);
+	}, false);
+
+	var ev = {};
+	ev.message = "calculate";
+	ev.nodes = d3.selectAll(".node").data();
+	ev.trusses = d3.selectAll(".truss").data();
+	ev.meta = { fixed: d3.select(meta.fixed).datum().id,
+							rolling: d3.select(meta.rolling).datum().id }
+
+	worker.postMessage(ev); // Send data to our worker.
 }
 
 var uncalculate = function() {
@@ -561,9 +571,10 @@ var setTension = function (truss, tensionobj) {
 		d3.select(truss).classed("tension", false)
 			.classed("compression", true);
 	}
-	else
+	else {
 		d3.select(truss).classed("compression", false)
-			classed("tension", true);
+			.classed("tension", true);
+	}
 }
 
 var addTensions = function (tensions) {
