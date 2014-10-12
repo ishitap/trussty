@@ -533,10 +533,17 @@ var calculate = function () {
 	var tensions = [];
 	var trusses = d3.selectAll(".truss");
 
+	trusses.each(function (td) {
+		var n = Math.random() - 0.5;
+		tensions.push({id: td.id, tension:n});
+	});
+	addTensions(tensions);
+
 	var worker = new Worker('trussSolverBackEnd.js');
 
 	worker.addEventListener('message', function(e) {
-  	console.log('Worker said: ', e.data);
+		console.log(e.data);
+  	addTensions(e.data);
 	}, false);
 
 	var ev = {};
@@ -547,6 +554,8 @@ var calculate = function () {
 							rolling: d3.select(meta.rolling).datum().id }
 
 	worker.postMessage(ev); // Send data to our worker.
+
+
 }
 
 var uncalculate = function() {

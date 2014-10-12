@@ -230,20 +230,31 @@ for (i = 0; i < numNodes; i++) {
 // A[i][j] i is row, j is column
 
 printMatrix(A)
-console.log(b)
+//console.log(b)
 
 // ----------------------- Solve the System ------------------------//
 
-self.postMessage(A)
+//console.log(A)
 
 Ainv = numeric.inv(A)
 var x = numeric.dot(Ainv, b)
 
-self.postMessage(x)
+// var xJSON = [];
+
+// x.forEach (function (e, i, a) {
+// 	xJSON.push({id: trusses[i].id, tension:e})
+// });
+
+//self.postMessage(xJSON)
 
 //Results
 // negative: member in compression
 // positive: member in tension     
+
+console.log("printing final values")
+//printMatrix(A)
+console.log(b)
+console.log(x)
 
 
 // ----------------------- Helper Functions ------------------------//
@@ -291,5 +302,4 @@ function printMatrix(A) {
 }
 
 }); // end worker onmessage
-
 
