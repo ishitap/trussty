@@ -136,6 +136,13 @@ self.addEventListener("message", function (e) {
 	var trusses = e.data.trusses;
 	var meta = e.data.meta;
 
+
+trusses.each(function (e, i, a) {
+	e.trussNum = i;
+});
+
+console.log(nodes);
+
 // --------------------- Statically Determinant Test ------------------ //
 numElements = trusses.length
 numNodes = nodes.length
@@ -185,14 +192,15 @@ for (i = 0; i < numNodes; i++) {
 	// for each connecting truss
 	for (j = 0; j < connTrusses.length; j++) {
 		trussNum = nodes[i].trusses[j].id
-		sourceNodeNum = i
-		destNodeNum = getDestTrussNode(i,j)
+		sourceNodeIndex = i
+		destNodeID = getDestTrussNodeID(i, j)
+		dsstNodeIndex = getIndexByID(destNodeID)
 		
 		// break forces into components by direction
 		sX = nodes[i].x
 		sY = nodes[i].y
-		dX = nodes[destNodeNum].x
-		dY = nodes[destNodeNum].y
+		dX = nodes[destNodeIndex].x
+		dY = nodes[destNodeIndex].y
 		len = Edistance(sX, sY, dX, dY)	
 
 		Fx = (dX - sX)/len
@@ -259,6 +267,17 @@ console.log(x)
 
 // ----------------------- Helper Functions ------------------------//
 
+function getIndexByID(nodeID) {
+	index = -1;
+	nodes.some(function (e, i, a) {
+		if(e.id == nodeID) {
+			index = i;
+			return true;
+		}
+		return false;
+	})
+}
+
 // Replicates the Matlab 'Zeros' function for declaring a matrix
 function zeros(dimensions) {
     var array = [];
@@ -279,9 +298,10 @@ function sortOther(a, b, c) {
 
 // For any nodeID in the A assembly forloop, returns the nodeID of the
 // destination node connected by the truss in question.
-function getDestTrussNode(nodeID, trussIndex) {
-	source = nodes[nodeID].trusses[trussIndex].source
-	dest = nodes[nodeID].trusses[trussIndex].dest
+function getDestTrussNodeID(nodeIndex, trussIndex) {
+	nodeID = nodes[nodeIndex].id;
+	source = nodes[nodeIndex].trusses[trussIndex].source
+	dest = nodes[nodeIndex].trusses[trussIndex].dest
 	actualDestination = sortOther(source, dest, nodeID)
 	return actualDestination
 }
