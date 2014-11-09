@@ -294,6 +294,8 @@ var createTruss = function (source, mp) {
 				.attr("class", "trussgrp")
 				.datum(td);
 
+			trussgrp.insert("text", ".truss").attr("class", "trusstext")
+
 			var truss = trussgrp.append("line")
 				.attr({
 					"class": "truss link",
@@ -408,6 +410,10 @@ var drag = function (d) {
 
   // drag a node
   if(mode == "node") {
+
+  var circleLoc = util.forceLocation(d, {x:d.fx + d.x, y:d.fy + d.y});
+  var textLoc = util.forceTextLocation(circleLoc);
+
   	if(snap) {
   		var s = util.snapToGrid({x:x, y:y});
 	  	x = s.x;
@@ -434,6 +440,15 @@ var drag = function (d) {
 	   		"x1": x, "y1": y,
   	 		"x2": x+d.fx, "y2": y+d.fy
    		});
+
+	   // drag force toolip too
+	  var parent = $(this).parent()[0];
+	  d3.select(parent).select(".forceCircle")
+	  	.attr(circleLoc);
+
+	  d3.select(parent).select(".forceText")
+	  		.attr(textLoc);
+
    	nd.x = x;
    	nd.y = y;
 
@@ -465,8 +480,9 @@ var drag = function (d) {
   	}
   	tempForce.classed("hidden", false).attr({"x2": x, "y2": y});
 
-  	var circleLoc = util.forceLocation(d, {x:x, y:y});
-  	var textLoc = util.forceTextLocation(circleLoc);
+
+  var circleLoc = util.forceLocation(d, {x:x, y:y});
+  var textLoc = util.forceTextLocation(circleLoc);
 
   	tempForceText.attr("visibility", "visible")
   		.select(".forceCircle")
@@ -543,7 +559,7 @@ var calculate = function () {
 
 	worker.addEventListener('message', function(e) {
 		console.log(e.data);
-  	addTensions(e.data);
+  	addTensions(e.data.trusses);
 	}, false);
 
 	var ev = {};
@@ -554,8 +570,6 @@ var calculate = function () {
 							rolling: d3.select(meta.rolling).datum().id }
 
 	worker.postMessage(ev); // Send data to our worker.
-
-
 }
 
 var uncalculate = function() {
@@ -574,21 +588,37 @@ var toggleXY = function () {
 	visible = !visible;
 }
 
-var setTension = function (truss, tensionobj) {
+var setTension = function (trussgrp, tensionobj) {
 	var tension = tensionobj.tension;
+	var truss = d3.select(trussgrp).select(".truss");
+	var x1 = parseInt(truss.attr("x1"));
+	var x2 = parseInt(truss.attr("x2"));
+	var y1 = parseInt(truss.attr("y1"));
+	var y2 = parseInt(truss.attr("y2"));
+	var x = ((x1 + x2)/2);
+	var y = ((y1 + y2)/2);
+
+	d3.select(trussgrp).select(".trusstext")
+		.text(tension.toFixed(2))
+		.attr({
+			x: x,
+			y: y
+		});
+	console.log(d3.select(trussgrp).select(".trusstext"))
+
 	if (tension < 0) {
-		d3.select(truss).classed("tension", false)
+		truss.classed("tension", false)
 			.classed("compression", true);
 	}
-	else {
-		d3.select(truss).classed("compression", false)
+	else if(tension > 0) {
+		truss.classed("compression", false)
 			.classed("tension", true);
 	}
 }
 
 var addTensions = function (tensions) {
-	var trusses = d3.selectAll(".truss");
-	trusses.each(function (td) {
+	var trussgrps = d3.selectAll(".trussgrp");
+	trussgrps.each(function (td) {
 		var tens = tensions.some(function (e, i, a) {
 			if (e.id == td.id) {
 				setTension(this, e);
@@ -598,3 +628,7 @@ var addTensions = function (tensions) {
 		}, this);
 	});
 }
+
+var errors = ["Oops, your structure isn't statistically determinant. Learn more",
+							"Oops, you need to have 2 joints, and at least one needs to be a fixed joint. Learn more",
+							"Looks like you're missing some forces. Learn more"]

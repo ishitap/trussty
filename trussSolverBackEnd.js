@@ -124,7 +124,10 @@ trusses = [ {id: 0, source: 0, dest: 6},
 			{id: 9, source: 5, dest: 4},
 			{id: 10, source: 6, dest: 4} ]
 
-meta = {fixed: 3, rolling: 0} */
+meta = {fixed: 3, rolling: 0} 
+*/
+
+
 
 self.addEventListener("message", function (e) {
 
@@ -132,16 +135,30 @@ self.addEventListener("message", function (e) {
 	if(data.message != "calculate")
 		return;
 
+	trusses = [ {id: 0, source: 0, dest: 2},
+			{id: 1, source: 2, dest: 1},
+			{id: 2, source: 1, dest: 0} ]
+
+	nodes = [ {id: 0, x: 0, y: 0, 
+			trusses: [ trusses[0], trusses[2] ] },
+		  {id: 1, x: 1, y: 0, 
+		  	trusses: [ trusses[1], 
+		  			   trusses[2] ] }, 
+		  {id: 2, x: 0, y: 1, fx: 50, fy: 0,
+		  	trusses: [ trusses[0], 
+		  			   trusses[1] ] } ]
+
+
+meta = {fixed: 0, rolling: 1}
+
 	var nodes = e.data.nodes;
 	var trusses = e.data.trusses;
 	var meta = e.data.meta;
 
 
-trusses.each(function (e, i, a) {
+trusses.forEach(function (e, i, a) {
 	e.trussNum = i;
 });
-
-console.log(nodes);
 
 // --------------------- Statically Determinant Test ------------------ //
 numElements = trusses.length
@@ -191,10 +208,10 @@ for (i = 0; i < numNodes; i++) {
 
 	// for each connecting truss
 	for (j = 0; j < connTrusses.length; j++) {
-		trussNum = nodes[i].trusses[j].id
+		trussNum = nodes[i].trusses[j].trussNum
 		sourceNodeIndex = i
 		destNodeID = getDestTrussNodeID(i, j)
-		dsstNodeIndex = getIndexByID(destNodeID)
+		destNodeIndex = getIndexByID(destNodeID)
 		
 		// break forces into components by direction
 		sX = nodes[i].x
@@ -213,13 +230,13 @@ for (i = 0; i < numNodes; i++) {
 
 	// add matrix values for reaction forces
 	// if fixed node
-	if (meta.fixed == i) {
+	if (meta.fixed == nodes[i].id) {
 		A[xRowNum][RfxInd] = A[xRowNum][RfxInd] + 1
 		A[yRowNum][RfyInd] = A[yRowNum][RfyInd] + 1
 	}
 
 	// if rolling node
-	if (meta.rolling == i) {
+	if (meta.rolling == nodes[i].id) {
 		A[yRowNum][RryInd] = A[yRowNum][RryInd] + 1
 	}
 
@@ -238,7 +255,6 @@ for (i = 0; i < numNodes; i++) {
 // A[i][j] i is row, j is column
 
 printMatrix(A)
-//console.log(b)
 
 // ----------------------- Solve the System ------------------------//
 
@@ -264,6 +280,14 @@ console.log("printing final values")
 console.log(b)
 console.log(x)
 
+x.forEach(function(e, i, a) {
+	if (i < trusses.length)
+		trusses[i].tension = e;
+});
+
+var backData = {message: "calculated", trusses: trusses}
+
+self.postMessage(backData);
 
 // ----------------------- Helper Functions ------------------------//
 
@@ -276,6 +300,7 @@ function getIndexByID(nodeID) {
 		}
 		return false;
 	})
+	return index;
 }
 
 // Replicates the Matlab 'Zeros' function for declaring a matrix
